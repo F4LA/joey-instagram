@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Instagram Analytics — Dr. Joey Munoz</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #ffffff0f;
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
     --accent: #E1306C;
     --accent2: #F77737;
-    --accent3: #833AB4;
-    --text: #f0f0f5;
-    --muted: #6b6b7e;
+    --accent3: #9b5de5;
+    --text: #f2f2f2;
+    --text2: #a0a0a0;
     --success: #4ade80;
-    --gold: #fbbf24;
+    --gold: #f59e0b;
+    --silver: #94a3b8;
+    --bronze: #cd7c2f;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,236 +27,187 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    overflow-x: hidden;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
-  /* Noise texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 20px 60px; }
 
   /* Header */
   header {
-    padding: 40px 0 32px;
+    padding: 32px 0 24px;
     border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
   }
 
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+  .header-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-  .logo-area { display: flex; align-items: center; gap: 14px; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
 
-  .ig-badge {
-    width: 44px; height: 44px;
-    background: linear-gradient(135deg, var(--accent3), var(--accent), var(--accent2));
-    border-radius: 12px;
+  .ig-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #833AB4, #E1306C, #F77737);
+    border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
+    font-size: 20px;
+    flex-shrink: 0;
   }
 
-  .header-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 1.3rem;
-    letter-spacing: -0.02em;
-  }
-
-  .header-sub {
-    font-size: 0.7rem;
-    color: var(--muted);
-    margin-top: 2px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
 
   .status-pill {
     display: flex; align-items: center; gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 6px 14px;
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .status-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-  }
-  .status-dot.live { background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse 2s infinite; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* Token setup */
-  .setup-section {
-    margin: 40px 0 0;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text2);
   }
 
-  .setup-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 6px;
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text2); }
+  .dot.live { background: var(--success); box-shadow: 0 0 6px var(--success); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Setup */
+  .setup-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 28px;
   }
 
-  .setup-desc {
-    font-size: 0.75rem;
-    color: var(--muted);
-    margin-bottom: 20px;
-    line-height: 1.6;
-  }
+  .setup-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .setup-card p { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.6; }
 
-  .token-row {
-    display: flex; gap: 10px; flex-wrap: wrap;
-  }
+  .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  .token-input {
+  input[type="password"], input[type="text"] {
     flex: 1;
     min-width: 200px;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
+    border-radius: 8px;
+    padding: 10px 14px;
     color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
     outline: none;
     transition: border-color 0.2s;
   }
-  .token-input:focus { border-color: var(--accent); }
-  .token-input::placeholder { color: var(--muted); }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: #444; }
 
-  .btn {
-    background: linear-gradient(135deg, var(--accent), var(--accent3));
+  .btn-primary {
+    background: var(--accent);
     color: white;
     border: none;
-    border-radius: 10px;
-    padding: 12px 22px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.8rem;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s;
+    transition: opacity 0.2s;
     white-space: nowrap;
   }
-  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  .btn:active { transform: translateY(0); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .btn-secondary {
+  .btn-ghost {
     background: var(--surface2);
     border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
+    color: var(--text2);
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
     cursor: pointer;
     transition: background 0.2s;
   }
-  .btn-secondary:hover { background: #222230; }
+  .btn-ghost:hover { background: #2a2a2a; color: var(--text); }
 
-  .error-box {
-    margin-top: 12px;
-    background: #ff000015;
-    border: 1px solid #ff000040;
-    border-radius: 8px;
+  .error-msg {
+    margin-top: 10px;
     padding: 10px 14px;
-    font-size: 0.72rem;
-    color: #ff6b6b;
+    background: #ff000018;
+    border: 1px solid #ff000035;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #ff7070;
     display: none;
   }
 
-  /* Stats row */
-  .stats-row {
+  /* Stats grid */
+  .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin: 32px 0;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
   }
 
   .stat-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 10px;
+    padding: 16px 18px;
   }
 
   .stat-label {
-    font-size: 0.65rem;
-    color: var(--muted);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 8px;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
   }
 
   .stat-value {
-    font-family: 'Syne', sans-serif;
+    font-size: 26px;
     font-weight: 800;
-    font-size: 1.8rem;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.5px;
     line-height: 1;
   }
 
-  .stat-sub {
-    font-size: 0.65rem;
-    color: var(--muted);
-    margin-top: 4px;
-  }
+  .stat-sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
 
-  /* Posts section */
-  .section-header {
+  /* Toolbar */
+  .toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .section-title {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
+  .toolbar-left { display: flex; align-items: center; gap: 10px; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text2);
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--muted);
+  }
+
+  .date-badge {
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   .sort-tabs {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -262,255 +215,248 @@
   }
 
   .sort-tab {
-    padding: 5px 12px;
+    padding: 5px 11px;
     border-radius: 5px;
-    font-size: 0.65rem;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
-    color: var(--muted);
-    transition: all 0.2s;
-    border: none;
+    color: var(--text2);
     background: none;
-    font-family: 'DM Mono', monospace;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
   }
-  .sort-tab.active {
+  .sort-tab.active { background: var(--surface2); color: var(--text); }
+  .sort-tab:hover:not(.active) { color: var(--text); }
+
+  /* Tooltip */
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+  .tooltip-icon {
+    width: 15px; height: 15px;
     background: var(--surface2);
-    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: help;
+    color: var(--text2);
+    margin-left: 5px;
   }
-
-  /* Post cards */
-  .posts-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .tooltip-box {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--text2);
+    white-space: nowrap;
+    z-index: 10;
+    line-height: 1.6;
+    min-width: 220px;
   }
+  .tooltip-wrap:hover .tooltip-box { display: block; }
 
-  .post-card {
+  /* Post list */
+  .posts-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .post-row {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 20px;
+    border-radius: 10px;
+    padding: 14px 16px;
     display: grid;
-    grid-template-columns: 36px 1fr auto;
-    gap: 16px;
-    align-items: center;
-    transition: border-color 0.2s, transform 0.2s;
-    cursor: default;
-    animation: fadeIn 0.4s ease both;
+    grid-template-columns: 28px 1fr auto;
+    gap: 14px;
+    align-items: start;
+    transition: border-color 0.15s;
+    animation: fadeUp 0.3s ease both;
   }
 
-  .post-card:hover {
-    border-color: #ffffff20;
-    transform: translateX(3px);
-  }
+  .post-row:hover { border-color: #3a3a3a; }
+  .post-row.r1 { border-left: 3px solid var(--gold); }
+  .post-row.r2 { border-left: 3px solid var(--silver); }
+  .post-row.r3 { border-left: 3px solid var(--bronze); }
 
-  .post-card.rank-1 { border-left: 3px solid var(--gold); }
-  .post-card.rank-2 { border-left: 3px solid #9ca3af; }
-  .post-card.rank-3 { border-left: 3px solid #b45309; }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .rank-num {
-    font-family: 'Syne', sans-serif;
+  .rank {
+    font-size: 15px;
     font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--muted);
+    color: var(--text2);
     text-align: center;
+    padding-top: 1px;
   }
-  .rank-1 .rank-num { color: var(--gold); }
-  .rank-2 .rank-num { color: #9ca3af; }
-  .rank-3 .rank-num { color: #b45309; }
+  .r1 .rank { color: var(--gold); }
+  .r2 .rank { color: var(--silver); }
+  .r3 .rank { color: var(--bronze); }
 
-  .post-main { min-width: 0; }
+  .post-body { min-width: 0; }
 
   .post-caption {
-    font-size: 0.78rem;
-    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text);
     margin-bottom: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.4;
   }
 
-  .post-meta {
+  .post-tags {
     display: flex;
-    gap: 12px;
+    gap: 6px;
     flex-wrap: wrap;
     align-items: center;
   }
 
-  .meta-chip {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.65rem;
-    color: var(--muted);
+  .tag {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
   }
 
-  .meta-chip .icon { font-size: 0.8rem; }
+  .tag-type { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .tag-video { background: #3b1a6025; color: #c084fc; border: 1px solid #3b1a6050; }
+  .tag-carousel { background: #14532d25; color: #4ade80; border: 1px solid #14532d50; }
+  .tag-image { background: #1e3a5f25; color: #60a5fa; border: 1px solid #1e3a5f50; }
 
-  .meta-chip.highlight { color: var(--accent2); }
+  .tag-date { color: var(--text2); font-family: 'JetBrains Mono', monospace; }
+
+  .metric { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); }
+  .metric-val { font-weight: 600; color: var(--text); }
+  .metric.hot .metric-val { color: var(--accent); }
 
   .post-right {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
-    min-width: 80px;
+    min-width: 90px;
   }
 
-  .engagement-bar-wrap {
-    width: 80px;
-    height: 4px;
-    background: var(--surface2);
+  .eng-score {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+  }
+
+  .eng-bar-track {
+    width: 90px;
+    height: 3px;
+    background: var(--border);
     border-radius: 2px;
     overflow: hidden;
   }
-
-  .engagement-bar {
+  .eng-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
     border-radius: 2px;
-    transition: width 0.6s ease;
-  }
-
-  .eng-label {
-    font-size: 0.6rem;
-    color: var(--muted);
-    text-align: right;
+    transition: width 0.5s ease;
   }
 
   .post-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.65rem;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--accent);
     text-decoration: none;
     padding: 4px 10px;
     border: 1px solid #E1306C30;
     border-radius: 6px;
-    transition: background 0.2s;
+    transition: background 0.15s;
+    white-space: nowrap;
   }
   .post-link:hover { background: #E1306C15; }
 
-  /* Type badge */
-  .type-badge {
-    font-size: 0.58rem;
-    padding: 2px 7px;
-    border-radius: 4px;
-    background: var(--surface2);
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .type-badge.VIDEO { background: #3b1a6030; color: var(--accent3); }
-  .type-badge.CAROUSEL_ALBUM { background: #1a3b1a30; color: var(--success); }
-  .type-badge.IMAGE { background: #1a2a3b30; color: #60a5fa; }
-
-  /* Loading & empty states */
+  /* States */
   .loading-state, .empty-state {
     text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
+    padding: 50px 20px;
+    color: var(--text2);
   }
 
   .spinner {
-    width: 36px; height: 36px;
+    width: 30px; height: 30px;
     border: 2px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
   }
-
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .loading-text { font-size: 0.75rem; }
+  .loading-state p, .empty-state p { font-size: 13px; }
 
-  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
-  .empty-text { font-size: 0.8rem; }
-
-  /* Dashboard hidden by default */
   #dashboard { display: none; }
 
-  /* Footer */
-  footer {
-    border-top: 1px solid var(--border);
-    margin-top: 48px;
-    padding: 24px 0;
-    text-align: center;
-    font-size: 0.65rem;
-    color: var(--muted);
-  }
-
-  /* Date range badge */
-  .date-range {
-    font-size: 0.65rem;
-    color: var(--muted);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+  /* Divider */
+  .divider { width: 1px; height: 14px; background: var(--border); }
 </style>
 </head>
 <body>
-
 <div class="container">
   <header>
     <div class="header-inner">
       <div class="logo-area">
-        <div class="ig-badge">📊</div>
+        <div class="ig-icon">📊</div>
         <div>
           <div class="header-title">Instagram Analytics</div>
           <div class="header-sub">dr.joeymunoz · Últimos 7 días</div>
         </div>
       </div>
       <div class="status-pill">
-        <div class="status-dot" id="statusDot"></div>
+        <div class="dot" id="statusDot"></div>
         <span id="statusText">Sin conectar</span>
       </div>
     </div>
   </header>
 
   <!-- Setup -->
-  <div class="setup-section" id="setupSection">
-    <div class="setup-title">Conectar cuenta de Instagram</div>
-    <div class="setup-desc">
-      Pega tu Access Token de la Meta Graph API para cargar los datos de rendimiento de los últimos 7 días.
+  <div class="setup-card" id="setupSection">
+    <h2>Conectar cuenta de Instagram</h2>
+    <p>Pega tu User Access Token de la app <strong>F4LA DAILY REPORT</strong> en el Graph API Explorer para cargar los datos de los últimos 7 días.</p>
+    <div class="input-row">
+      <input type="password" id="tokenInput" placeholder="EAAQxc... (pega tu token aquí)" />
+      <button class="btn-primary" id="connectBtn" onclick="connect()">Conectar</button>
     </div>
-    <div class="token-row">
-      <input type="password" class="token-input" id="tokenInput" placeholder="EAAMzt... (pega tu token aquí)" />
-      <button class="btn" id="connectBtn" onclick="connect()">Conectar →</button>
-    </div>
-    <div class="error-box" id="errorBox"></div>
+    <div class="error-msg" id="errorBox"></div>
   </div>
 
   <!-- Dashboard -->
   <div id="dashboard">
-    <!-- Stats -->
-    <div class="stats-row" id="statsRow"></div>
+    <div class="stats-grid" id="statsGrid"></div>
 
-    <!-- Posts -->
-    <div class="section-header">
-      <div class="section-title">Posts · Ranking de rendimiento</div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <span class="date-range" id="dateRangeLabel"></span>
-        <button class="btn-secondary" onclick="refresh()">↻ Actualizar</button>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="section-label">Posts</span>
+        <span class="date-badge" id="dateLabel"></span>
+        <div class="tooltip-wrap">
+          <div class="tooltip-icon">?</div>
+          <div class="tooltip-box">
+            <strong>Cómo se calcula el ranking:</strong><br>
+            Engagement = Likes + Comentarios<br>
+            El alcance e impresiones vienen directamente<br>
+            de la Instagram Graph API (insights).
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-ghost" onclick="refresh()">↻ Actualizar</button>
         <div class="sort-tabs">
-          <button class="sort-tab active" onclick="sortBy('engagement', this)">Engagement</button>
-          <button class="sort-tab" onclick="sortBy('reach', this)">Alcance</button>
-          <button class="sort-tab" onclick="sortBy('impressions', this)">Impresiones</button>
-          <button class="sort-tab" onclick="sortBy('likes', this)">Likes</button>
+          <button class="sort-tab active" onclick="sortBy('engagement',this)">Engagement</button>
+          <button class="sort-tab" onclick="sortBy('reach',this)">Alcance</button>
+          <button class="sort-tab" onclick="sortBy('impressions',this)">Impresiones</button>
+          <button class="sort-tab" onclick="sortBy('likes',this)">Likes</button>
         </div>
       </div>
     </div>
@@ -518,29 +464,23 @@
     <div id="postsContainer">
       <div class="loading-state" id="loadingState">
         <div class="spinner"></div>
-        <div class="loading-text">Cargando posts...</div>
+        <p>Cargando posts...</p>
       </div>
-      <div class="posts-grid" id="postsGrid"></div>
+      <div class="posts-list" id="postsList"></div>
     </div>
   </div>
-
-  <footer>
-    Dashboard privado · Dr. Joey Munoz · Datos en tiempo real via Instagram Graph API
-  </footer>
 </div>
 
 <script>
 let TOKEN = '';
+let PAGE_TOKEN = '';
+let IG_ID = '';
 let allPosts = [];
 let currentSort = 'engagement';
-let igAccountId = '';
 
-// Pre-fill token if saved
 window.onload = () => {
   const saved = sessionStorage.getItem('ig_token');
-  if (saved) {
-    document.getElementById('tokenInput').value = saved;
-  }
+  if (saved) document.getElementById('tokenInput').value = saved;
 };
 
 async function connect() {
@@ -553,64 +493,57 @@ async function connect() {
   hideError();
 
   try {
-    // 1. Obtener Page Access Token para acceder al IG Business Account
-    const pagesRes = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${TOKEN}`);
-    const pagesData = await pagesRes.json();
+    // Obtener Pages + Instagram vinculado
+    const res = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${TOKEN}`);
+    const data = await res.json();
 
-    if (pagesData.error) throw new Error(pagesData.error.message);
-    if (!pagesData.data || pagesData.data.length === 0) throw new Error('No se encontraron Pages vinculadas a este token.');
+    if (data.error) throw new Error(data.error.message);
+    if (!data.data || data.data.length === 0) throw new Error('No se encontraron Facebook Pages vinculadas a este token.');
 
-    // Buscar la Page con Instagram Business vinculado
-    let pageToken = null;
-    let igId = null;
-    for (const page of pagesData.data) {
+    let found = null;
+    for (const page of data.data) {
       if (page.instagram_business_account) {
-        pageToken = page.access_token;
-        igId = page.instagram_business_account.id;
+        found = page;
         break;
       }
     }
+    if (!found) throw new Error('No se encontró Instagram Business Account vinculado a ninguna Page.');
 
-    if (!igId || !pageToken) throw new Error('No se encontró Instagram Business Account vinculado a ninguna Page.');
+    PAGE_TOKEN = found.access_token;
+    IG_ID = found.instagram_business_account.id;
 
-    // Usar Page Access Token para todas las llamadas de IG
-    TOKEN = pageToken;
-    igAccountId = igId;
-    sessionStorage.setItem('ig_token', document.getElementById('tokenInput').value.trim());
+    sessionStorage.setItem('ig_token', TOKEN);
 
-    // Connected!
     document.getElementById('statusDot').classList.add('live');
-    document.getElementById('statusText').textContent = 'Conectado';
+    document.getElementById('statusText').textContent = '@dr.joeymunoz conectado';
     document.getElementById('setupSection').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
 
     await loadPosts();
 
-  } catch (err) {
+  } catch(err) {
     showError(err.message);
     btn.disabled = false;
-    btn.textContent = 'Conectar →';
+    btn.textContent = 'Conectar';
   }
 }
 
 async function loadPosts() {
   document.getElementById('loadingState').style.display = 'block';
-  document.getElementById('postsGrid').innerHTML = '';
-  document.getElementById('statsRow').innerHTML = '';
+  document.getElementById('postsList').innerHTML = '';
+  document.getElementById('statsGrid').innerHTML = '';
 
   try {
-    // Get posts from last 7 days
     const since = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
     const until = Math.floor(Date.now() / 1000);
 
-    // Update date label
-    const sinceDate = new Date(since * 1000).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
-    const untilDate = new Date(until * 1000).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
-    document.getElementById('dateRangeLabel').textContent = `${sinceDate} – ${untilDate}`;
+    const sinceStr = new Date(since*1000).toLocaleDateString('es-MX',{month:'short',day:'numeric'});
+    const untilStr = new Date(until*1000).toLocaleDateString('es-MX',{month:'short',day:'numeric'});
+    document.getElementById('dateLabel').textContent = `${sinceStr} – ${untilStr}`;
 
-    // Fetch media
+    // Fetch media list
     const mediaRes = await fetch(
-      `https://graph.facebook.com/v19.0/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&since=${since}&until=${until}&limit=50&access_token=${TOKEN}`
+      `https://graph.facebook.com/v19.0/${IG_ID}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&since=${since}&until=${until}&limit=50&access_token=${PAGE_TOKEN}`
     );
     const mediaData = await mediaRes.json();
     if (mediaData.error) throw new Error(mediaData.error.message);
@@ -618,28 +551,30 @@ async function loadPosts() {
     const posts = mediaData.data || [];
     if (posts.length === 0) {
       document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('postsGrid').innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">📭</div>
-          <div class="empty-text">No se encontraron posts en los últimos 7 días.</div>
-        </div>`;
+      document.getElementById('postsList').innerHTML = '<div class="empty-state"><p>No hay posts en los últimos 7 días.</p></div>';
       return;
     }
 
-    // Fetch insights for each post
+    // Fetch insights para cada post (reach + impressions)
     const enriched = await Promise.all(posts.map(async (post) => {
       try {
-        const insightsRes = await fetch(
-          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=impressions,reach,engagement&access_token=${TOKEN}`
+        const iRes = await fetch(
+          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=reach,impressions&period=lifetime&access_token=${PAGE_TOKEN}`
         );
-        const insightsData = await insightsRes.json();
-        const metrics = {};
-        if (insightsData.data) {
-          insightsData.data.forEach(m => { metrics[m.name] = m.values?.[0]?.value || 0; });
+        const iData = await iRes.json();
+        let reach = 0, impressions = 0;
+        if (iData.data) {
+          iData.data.forEach(m => {
+            if (m.name === 'reach') reach = m.values?.[0]?.value || 0;
+            if (m.name === 'impressions') impressions = m.values?.[0]?.value || 0;
+          });
         }
-        return { ...post, ...metrics };
+        // Engagement = likes + comments (calculado)
+        const engagement = (post.like_count || 0) + (post.comments_count || 0);
+        return { ...post, reach, impressions, engagement };
       } catch {
-        return { ...post, impressions: 0, reach: 0, engagement: 0 };
+        const engagement = (post.like_count || 0) + (post.comments_count || 0);
+        return { ...post, reach: 0, impressions: 0, engagement };
       }
     }));
 
@@ -648,90 +583,88 @@ async function loadPosts() {
     renderPosts(enriched, currentSort);
     document.getElementById('loadingState').style.display = 'none';
 
-  } catch (err) {
+  } catch(err) {
     document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('postsGrid').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <div class="empty-text">${err.message}</div>
-      </div>`;
+    document.getElementById('postsList').innerHTML = `<div class="empty-state"><p>⚠️ ${err.message}</p></div>`;
   }
 }
 
 function renderStats(posts) {
-  const totalReach = posts.reduce((s, p) => s + (p.reach || 0), 0);
-  const totalImpressions = posts.reduce((s, p) => s + (p.impressions || 0), 0);
-  const totalLikes = posts.reduce((s, p) => s + (p.like_count || 0), 0);
-  const totalComments = posts.reduce((s, p) => s + (p.comments_count || 0), 0);
-  const avgEngagement = posts.length ? Math.round(posts.reduce((s, p) => s + (p.engagement || 0), 0) / posts.length) : 0;
+  const totalReach = posts.reduce((s,p) => s+(p.reach||0), 0);
+  const totalImpressions = posts.reduce((s,p) => s+(p.impressions||0), 0);
+  const totalLikes = posts.reduce((s,p) => s+(p.like_count||0), 0);
+  const totalComments = posts.reduce((s,p) => s+(p.comments_count||0), 0);
+  const totalEng = posts.reduce((s,p) => s+(p.engagement||0), 0);
+  const avgEng = posts.length ? Math.round(totalEng / posts.length) : 0;
 
-  document.getElementById('statsRow').innerHTML = `
+  document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card">
-      <div class="stat-label">Posts analizados</div>
+      <div class="stat-label">Posts</div>
       <div class="stat-value">${posts.length}</div>
       <div class="stat-sub">últimos 7 días</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Alcance total</div>
-      <div class="stat-value">${fmtNum(totalReach)}</div>
+      <div class="stat-value">${fmt(totalReach)}</div>
       <div class="stat-sub">personas únicas</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Impresiones</div>
-      <div class="stat-value">${fmtNum(totalImpressions)}</div>
+      <div class="stat-value">${fmt(totalImpressions)}</div>
       <div class="stat-sub">vistas totales</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Likes totales</div>
-      <div class="stat-value">${fmtNum(totalLikes)}</div>
-      <div class="stat-sub">${fmtNum(totalComments)} comentarios</div>
+      <div class="stat-value">${fmt(totalLikes)}</div>
+      <div class="stat-sub">${fmt(totalComments)} comentarios</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Eng. promedio</div>
-      <div class="stat-value">${fmtNum(avgEngagement)}</div>
-      <div class="stat-sub">por post</div>
+      <div class="stat-value">${fmt(avgEng)}</div>
+      <div class="stat-sub">likes + comentarios</div>
     </div>
   `;
 }
 
 function renderPosts(posts, sortKey) {
-  const sorted = [...posts].sort((a, b) => {
-    if (sortKey === 'likes') return (b.like_count || 0) - (a.like_count || 0);
-    if (sortKey === 'reach') return (b.reach || 0) - (a.reach || 0);
-    if (sortKey === 'impressions') return (b.impressions || 0) - (a.impressions || 0);
-    return (b.engagement || 0) - (a.engagement || 0);
+  const sorted = [...posts].sort((a,b) => {
+    if (sortKey === 'likes') return (b.like_count||0) - (a.like_count||0);
+    if (sortKey === 'reach') return (b.reach||0) - (a.reach||0);
+    if (sortKey === 'impressions') return (b.impressions||0) - (a.impressions||0);
+    return (b.engagement||0) - (a.engagement||0); // default: likes+comments
   });
 
-  const maxEng = Math.max(...sorted.map(p => p.engagement || 0), 1);
+  const maxEng = Math.max(...sorted.map(p => p.engagement||0), 1);
 
-  const grid = document.getElementById('postsGrid');
-  grid.innerHTML = sorted.map((post, i) => {
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const caption = post.caption ? post.caption.substring(0, 120) + (post.caption.length > 120 ? '...' : '') : '(sin caption)';
-    const date = new Date(post.timestamp).toLocaleDateString('es-MX', { weekday: 'short', month: 'short', day: 'numeric' });
-    const engPct = Math.round(((post.engagement || 0) / maxEng) * 100);
-    const typeLabel = post.media_type || 'IMAGE';
+  document.getElementById('postsList').innerHTML = sorted.map((p, i) => {
+    const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const caption = p.caption ? p.caption.substring(0,110)+(p.caption.length>110?'…':'') : '(sin caption)';
+    const date = new Date(p.timestamp).toLocaleDateString('es-MX',{weekday:'short',month:'short',day:'numeric'});
+    const typeTag = p.media_type==='VIDEO'?'tag-video':p.media_type==='CAROUSEL_ALBUM'?'tag-carousel':'tag-image';
+    const typeLabel = p.media_type==='CAROUSEL_ALBUM'?'Carrusel':p.media_type==='VIDEO'?'Video':'Imagen';
+    const engPct = Math.round(((p.engagement||0)/maxEng)*100);
 
     return `
-      <div class="post-card ${rankClass}" style="animation-delay: ${i * 0.05}s">
-        <div class="rank-num">${i + 1}</div>
-        <div class="post-main">
-          <div class="post-caption">${escHtml(caption)}</div>
-          <div class="post-meta">
-            <span class="type-badge ${typeLabel}">${typeLabel === 'CAROUSEL_ALBUM' ? 'CARRUSEL' : typeLabel}</span>
-            <span class="meta-chip"><span class="icon">📅</span>${date}</span>
-            <span class="meta-chip highlight"><span class="icon">❤️</span>${fmtNum(post.like_count || 0)}</span>
-            <span class="meta-chip"><span class="icon">💬</span>${fmtNum(post.comments_count || 0)}</span>
-            <span class="meta-chip"><span class="icon">👁️</span>${fmtNum(post.reach || 0)} alcance</span>
-            <span class="meta-chip"><span class="icon">📈</span>${fmtNum(post.impressions || 0)} imp.</span>
+      <div class="post-row ${rankClass}" style="animation-delay:${i*0.04}s">
+        <div class="rank">${i+1}</div>
+        <div class="post-body">
+          <div class="post-caption">${esc(caption)}</div>
+          <div class="post-tags">
+            <span class="tag ${typeTag}">${typeLabel}</span>
+            <span class="tag tag-date">${date}</span>
+            <span class="divider"></span>
+            <span class="metric hot">❤️ <span class="metric-val">${fmt(p.like_count||0)}</span></span>
+            <span class="metric">💬 <span class="metric-val">${fmt(p.comments_count||0)}</span></span>
+            <span class="metric">👁 <span class="metric-val">${fmt(p.reach||0)}</span> alcance</span>
+            <span class="metric">📊 <span class="metric-val">${fmt(p.impressions||0)}</span> imp.</span>
           </div>
         </div>
         <div class="post-right">
-          <a href="${post.permalink}" target="_blank" class="post-link">Ver post ↗</a>
-          <div class="engagement-bar-wrap">
-            <div class="engagement-bar" style="width: ${engPct}%"></div>
+          <a href="${p.permalink}" target="_blank" class="post-link">Ver post ↗</a>
+          <div class="eng-bar-track">
+            <div class="eng-bar-fill" style="width:${engPct}%"></div>
           </div>
-          <div class="eng-label">eng: ${fmtNum(post.engagement || 0)}</div>
+          <div class="eng-score">eng ${fmt(p.engagement||0)}</div>
         </div>
       </div>
     `;
@@ -745,30 +678,25 @@ function sortBy(key, el) {
   renderPosts(allPosts, key);
 }
 
-function refresh() {
-  if (!igAccountId) return;
-  loadPosts();
-}
+function refresh() { if (IG_ID) loadPosts(); }
 
-function fmtNum(n) {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+function fmt(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+'M';
+  if (n >= 1000) return (n/1000).toFixed(1)+'K';
   return n.toLocaleString('es-MX');
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function showError(msg) {
-  const box = document.getElementById('errorBox');
-  box.textContent = '⚠️ ' + msg;
-  box.style.display = 'block';
+  const b = document.getElementById('errorBox');
+  b.textContent = '⚠️ ' + msg;
+  b.style.display = 'block';
 }
 
-function hideError() {
-  document.getElementById('errorBox').style.display = 'none';
-}
+function hideError() { document.getElementById('errorBox').style.display = 'none'; }
 </script>
 </body>
 </html>
