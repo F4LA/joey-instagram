@@ -411,7 +411,7 @@
         <div class="ig-icon">📊</div>
         <div>
           <div class="header-title">Instagram Analytics</div>
-          <div class="header-sub">dr.joeymunoz · Últimos 7 días</div>
+          <div class="header-sub">dr.joeymunoz · Semana pasada</div>
         </div>
       </div>
       <div class="status-pill">
@@ -534,12 +534,23 @@ async function loadPosts() {
   document.getElementById('statsGrid').innerHTML = '';
 
   try {
-    const since = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
-    const until = Math.floor(Date.now() / 1000);
+    // Semana pasada: lunes a domingo
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=dom, 1=lun...
+    const diffToLastMonday = dayOfWeek === 0 ? 13 : dayOfWeek + 6; // días hasta el lunes pasado
+    const lastMonday = new Date(now);
+    lastMonday.setDate(now.getDate() - diffToLastMonday);
+    lastMonday.setHours(0, 0, 0, 0);
+    const lastSunday = new Date(lastMonday);
+    lastSunday.setDate(lastMonday.getDate() + 6);
+    lastSunday.setHours(23, 59, 59, 999);
 
-    const sinceStr = new Date(since*1000).toLocaleDateString('es-MX',{month:'short',day:'numeric'});
-    const untilStr = new Date(until*1000).toLocaleDateString('es-MX',{month:'short',day:'numeric'});
-    document.getElementById('dateLabel').textContent = `${sinceStr} – ${untilStr}`;
+    const since = Math.floor(lastMonday.getTime() / 1000);
+    const until = Math.floor(lastSunday.getTime() / 1000);
+
+    const sinceStr = lastMonday.toLocaleDateString('es-MX',{month:'short',day:'numeric'});
+    const untilStr = lastSunday.toLocaleDateString('es-MX',{month:'short',day:'numeric'});
+    document.getElementById('dateLabel').textContent = `${sinceStr} – ${untilStr} (sem. pasada)`;
 
     // Fetch media list
     const mediaRes = await fetch(
@@ -628,6 +639,11 @@ function renderStats(posts) {
       <div class="stat-label">Likes totales</div>
       <div class="stat-value">${fmt(totalLikes)}</div>
       <div class="stat-sub">${fmt(totalComments)} comentarios</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Comentarios</div>
+      <div class="stat-value">${fmt(totalComments)}</div>
+      <div class="stat-sub">total de respuestas</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Eng. promedio</div>
