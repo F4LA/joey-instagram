@@ -555,46 +555,37 @@ async function loadPosts() {
       return;
     }
 
-    // Fetch insights para cada post
-    // Métricas orgánicas de IG varían por tipo: IMAGE/CAROUSEL usan reach, impressions
-    // VIDEO usa reach, impressions, plays
+    // Fetch insights por post usando métricas actuales de Meta API v22+
+    // IMAGE/CAROUSEL: reach, saved, total_interactions
+    // VIDEO/REEL: reach, saved, total_interactions, views
     const enriched = await Promise.all(posts.map(async (post) => {
       const engagement = (post.like_count || 0) + (post.comments_count || 0);
       try {
-        // Intentar con las métricas estándar orgánicas
-        const metricsList = post.media_type === 'VIDEO'
-          ? 'reach,impressions,plays'
-          : 'reach,impressions';
+        const isVideo = post.media_type === 'VIDEO';
+        const metricsList = isVideo
+          ? 'reach,saved,total_interactions,views'
+          : 'reach,saved,total_interactions';
 
         const iRes = await fetch(
-          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=${metricsList}&access_token=${PAGE_TOKEN}`
+          `https://graph.facebook.com/v22.0/${post.id}/insights?metric=${metricsList}&access_token=${PAGE_TOKEN}`
         );
         const iData = await iRes.json();
 
-        // Debug: ver qué regresa la API
-        console.log(`[${post.media_type}] ${(post.caption||'').substring(0,40)}`, iData);
-
-        let reach = 0, impressions = 0, plays = 0;
+        let reach = 0, saved = 0, total_interactions = 0, views = 0;
         if (iData.data) {
           iData.data.forEach(m => {
-            if (m.name === 'reach') reach = m.values?.[0]?.value ?? m.id ? 0 : 0;
-            if (m.name === 'impressions') impressions = m.values?.[0]?.value ?? 0;
-            if (m.name === 'plays') plays = m.values?.[0]?.value ?? 0;
-            // Algunos endpoints regresan el valor directo sin array
-            if (m.name === 'reach' && typeof m.value === 'number') reach = m.value;
-            if (m.name === 'impressions' && typeof m.value === 'number') impressions = m.value;
+            if (m.name === 'reach') reach = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
+            if (m.name === 'saved') saved = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
+            if (m.name === 'total_interactions') total_interactions = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
+            if (m.name === 'views') views = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
           });
         }
 
-        // Si hay error en la respuesta, loguear
-        if (iData.error) {
-          console.warn(`Insights error para ${post.id}:`, iData.error.message);
-        }
+        if (iData.error) console.warn(`Insights error ${post.id}:`, iData.error.message);
 
-        return { ...post, reach, impressions, plays, engagement };
+        return { ...post, reach, saved, total_interactions, views, engagement };
       } catch(e) {
-        console.error('Fetch insights failed:', e);
-        return { ...post, reach: 0, impressions: 0, plays: 0, engagement };
+        return { ...post, reach: 0, saved: 0, total_interactions: 0, views: 0, engagement };
       }
     }));
 
@@ -611,7 +602,7 @@ async function loadPosts() {
 
 function renderStats(posts) {
   const totalReach = posts.reduce((s,p) => s+(p.reach||0), 0);
-  const totalImpressions = posts.reduce((s,p) => s+(p.impressions||0), 0);
+  const totalSaved = posts.reduce((s,p) => s+(p.saved||0), 0);
   const totalLikes = posts.reduce((s,p) => s+(p.like_count||0), 0);
   const totalComments = posts.reduce((s,p) => s+(p.comments_count||0), 0);
   const totalEng = posts.reduce((s,p) => s+(p.engagement||0), 0);
@@ -629,9 +620,9 @@ function renderStats(posts) {
       <div class="stat-sub">personas únicas</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Impresiones</div>
-      <div class="stat-value">${fmt(totalImpressions)}</div>
-      <div class="stat-sub">vistas totales</div>
+      <div class="stat-label">Guardados</div>
+      <div class="stat-value">${fmt(totalSaved)}</div>
+      <div class="stat-sub">total de saves</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Likes totales</div>
@@ -676,7 +667,8 @@ function renderPosts(posts, sortKey) {
             <span class="metric hot">❤️ <span class="metric-val">${fmt(p.like_count||0)}</span></span>
             <span class="metric">💬 <span class="metric-val">${fmt(p.comments_count||0)}</span></span>
             <span class="metric">👁 <span class="metric-val">${fmt(p.reach||0)}</span> alcance</span>
-            <span class="metric">📊 <span class="metric-val">${fmt(p.impressions||0)}</span> imp.</span>
+            <span class="metric">🔖 <span class="metric-val">${fmt(p.saved||0)}</span> guardados</span>
+            ${p.media_type === 'VIDEO' ? `<span class="metric">▶️ <span class="metric-val">${fmt(p.views||0)}</span> views</span>` : ''}
           </div>
         </div>
         <div class="post-right">
