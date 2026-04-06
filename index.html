@@ -444,8 +444,8 @@
           <div class="tooltip-icon">?</div>
           <div class="tooltip-box">
             <strong>Cómo se calcula el ranking:</strong><br>
-            Engagement = Likes + Comentarios<br>
-            El alcance e impresiones vienen directamente<br>
+            Engagement = Likes + Comentarios + Guardados<br>
+            El alcance viene directamente<br>
             de la Instagram Graph API (insights).
           </div>
         </div>
@@ -455,7 +455,6 @@
         <div class="sort-tabs">
           <button class="sort-tab active" onclick="sortBy('engagement',this)">Engagement</button>
           <button class="sort-tab" onclick="sortBy('reach',this)">Alcance</button>
-          <button class="sort-tab" onclick="sortBy('impressions',this)">Impresiones</button>
           <button class="sort-tab" onclick="sortBy('likes',this)">Likes</button>
         </div>
       </div>
@@ -570,7 +569,7 @@ async function loadPosts() {
     // IMAGE/CAROUSEL: reach, saved, total_interactions
     // VIDEO/REEL: reach, saved, total_interactions, views
     const enriched = await Promise.all(posts.map(async (post) => {
-      const engagement = (post.like_count || 0) + (post.comments_count || 0);
+      const engagement = (post.like_count || 0) + (post.comments_count || 0) + (post.saved || 0);
       try {
         const isVideo = post.media_type === 'VIDEO';
         const metricsList = isVideo
@@ -638,7 +637,6 @@ function renderStats(posts) {
     <div class="stat-card">
       <div class="stat-label">Likes totales</div>
       <div class="stat-value">${fmt(totalLikes)}</div>
-      <div class="stat-sub">${fmt(totalComments)} comentarios</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Comentarios</div>
@@ -648,7 +646,7 @@ function renderStats(posts) {
     <div class="stat-card">
       <div class="stat-label">Eng. promedio</div>
       <div class="stat-value">${fmt(avgEng)}</div>
-      <div class="stat-sub">likes + comentarios</div>
+      <div class="stat-sub">likes + comentarios + guardados</div>
     </div>
   `;
 }
