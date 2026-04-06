@@ -555,26 +555,46 @@ async function loadPosts() {
       return;
     }
 
-    // Fetch insights para cada post (reach + impressions)
+    // Fetch insights para cada post
+    // Métricas orgánicas de IG varían por tipo: IMAGE/CAROUSEL usan reach, impressions
+    // VIDEO usa reach, impressions, plays
     const enriched = await Promise.all(posts.map(async (post) => {
+      const engagement = (post.like_count || 0) + (post.comments_count || 0);
       try {
+        // Intentar con las métricas estándar orgánicas
+        const metricsList = post.media_type === 'VIDEO'
+          ? 'reach,impressions,plays'
+          : 'reach,impressions';
+
         const iRes = await fetch(
-          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=reach,impressions&period=lifetime&access_token=${PAGE_TOKEN}`
+          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=${metricsList}&access_token=${PAGE_TOKEN}`
         );
         const iData = await iRes.json();
-        let reach = 0, impressions = 0;
+
+        // Debug: ver qué regresa la API
+        console.log(`[${post.media_type}] ${(post.caption||'').substring(0,40)}`, iData);
+
+        let reach = 0, impressions = 0, plays = 0;
         if (iData.data) {
           iData.data.forEach(m => {
-            if (m.name === 'reach') reach = m.values?.[0]?.value || 0;
-            if (m.name === 'impressions') impressions = m.values?.[0]?.value || 0;
+            if (m.name === 'reach') reach = m.values?.[0]?.value ?? m.id ? 0 : 0;
+            if (m.name === 'impressions') impressions = m.values?.[0]?.value ?? 0;
+            if (m.name === 'plays') plays = m.values?.[0]?.value ?? 0;
+            // Algunos endpoints regresan el valor directo sin array
+            if (m.name === 'reach' && typeof m.value === 'number') reach = m.value;
+            if (m.name === 'impressions' && typeof m.value === 'number') impressions = m.value;
           });
         }
-        // Engagement = likes + comments (calculado)
-        const engagement = (post.like_count || 0) + (post.comments_count || 0);
-        return { ...post, reach, impressions, engagement };
-      } catch {
-        const engagement = (post.like_count || 0) + (post.comments_count || 0);
-        return { ...post, reach: 0, impressions: 0, engagement };
+
+        // Si hay error en la respuesta, loguear
+        if (iData.error) {
+          console.warn(`Insights error para ${post.id}:`, iData.error.message);
+        }
+
+        return { ...post, reach, impressions, plays, engagement };
+      } catch(e) {
+        console.error('Fetch insights failed:', e);
+        return { ...post, reach: 0, impressions: 0, plays: 0, engagement };
       }
     }));
 
