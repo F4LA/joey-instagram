@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instagram Analytics — Dr. Joey Munoz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #ffffff0f;
+    --accent: #E1306C;
+    --accent2: #F77737;
+    --accent3: #833AB4;
+    --text: #f0f0f5;
+    --muted: #6b6b7e;
+    --success: #4ade80;
+    --gold: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .logo-area { display: flex; align-items: center; gap: 14px; }
+
+  .ig-badge {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent3), var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+  }
+
+  .header-sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .status-dot.live { background: var(--success); box-shadow: 0 0 6px var(--success); animation: pulse 2s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Token setup */
+  .setup-section {
+    margin: 40px 0 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+
+  .setup-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .setup-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .token-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  .token-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .token-input:focus { border-color: var(--accent); }
+  .token-input::placeholder { color: var(--muted); }
+
+  .btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-secondary:hover { background: #222230; }
+
+  .error-box {
+    margin-top: 12px;
+    background: #ff000015;
+    border: 1px solid #ff000040;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    color: #ff6b6b;
+    display: none;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 32px 0;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.8rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Posts section */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .sort-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .sort-tab {
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 0.65rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: 'DM Mono', monospace;
+  }
+  .sort-tab.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* Post cards */
+  .posts-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+    animation: fadeIn 0.4s ease both;
+  }
+
+  .post-card:hover {
+    border-color: #ffffff20;
+    transform: translateX(3px);
+  }
+
+  .post-card.rank-1 { border-left: 3px solid var(--gold); }
+  .post-card.rank-2 { border-left: 3px solid #9ca3af; }
+  .post-card.rank-3 { border-left: 3px solid #b45309; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .rank-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  .rank-1 .rank-num { color: var(--gold); }
+  .rank-2 .rank-num { color: #9ca3af; }
+  .rank-3 .rank-num { color: #b45309; }
+
+  .post-main { min-width: 0; }
+
+  .post-caption {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text);
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .meta-chip .icon { font-size: 0.8rem; }
+
+  .meta-chip.highlight { color: var(--accent2); }
+
+  .post-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 80px;
+  }
+
+  .engagement-bar-wrap {
+    width: 80px;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .engagement-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .eng-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .post-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid #E1306C30;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+  .post-link:hover { background: #E1306C15; }
+
+  /* Type badge */
+  .type-badge {
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--surface2);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .type-badge.VIDEO { background: #3b1a6030; color: var(--accent3); }
+  .type-badge.CAROUSEL_ALBUM { background: #1a3b1a30; color: var(--success); }
+  .type-badge.IMAGE { background: #1a2a3b30; color: #60a5fa; }
+
+  /* Loading & empty states */
+  .loading-state, .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-size: 0.75rem; }
+
+  .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-text { font-size: 0.8rem; }
+
+  /* Dashboard hidden by default */
+  #dashboard { display: none; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+    padding: 24px 0;
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  /* Date range badge */
+  .date-range {
+    font-size: 0.65rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo-area">
+        <div class="ig-badge">📊</div>
+        <div>
+          <div class="header-title">Instagram Analytics</div>
+          <div class="header-sub">dr.joeymunoz · Últimos 7 días</div>
+        </div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Sin conectar</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Setup -->
+  <div class="setup-section" id="setupSection">
+    <div class="setup-title">Conectar cuenta de Instagram</div>
+    <div class="setup-desc">
+      Pega tu Access Token de la Meta Graph API para cargar los datos de rendimiento de los últimos 7 días.
+    </div>
+    <div class="token-row">
+      <input type="password" class="token-input" id="tokenInput" placeholder="EAAMzt... (pega tu token aquí)" />
+      <button class="btn" id="connectBtn" onclick="connect()">Conectar →</button>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <!-- Stats -->
+    <div class="stats-row" id="statsRow"></div>
+
+    <!-- Posts -->
+    <div class="section-header">
+      <div class="section-title">Posts · Ranking de rendimiento</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="date-range" id="dateRangeLabel"></span>
+        <button class="btn-secondary" onclick="refresh()">↻ Actualizar</button>
+        <div class="sort-tabs">
+          <button class="sort-tab active" onclick="sortBy('engagement', this)">Engagement</button>
+          <button class="sort-tab" onclick="sortBy('reach', this)">Alcance</button>
+          <button class="sort-tab" onclick="sortBy('impressions', this)">Impresiones</button>
+          <button class="sort-tab" onclick="sortBy('likes', this)">Likes</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="postsContainer">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando posts...</div>
+      </div>
+      <div class="posts-grid" id="postsGrid"></div>
+    </div>
+  </div>
+
+  <footer>
+    Dashboard privado · Dr. Joey Munoz · Datos en tiempo real via Instagram Graph API
+  </footer>
+</div>
+
+<script>
+let TOKEN = '';
+let allPosts = [];
+let currentSort = 'engagement';
+let igAccountId = '';
+
+// Pre-fill token if saved
+window.onload = () => {
+  const saved = sessionStorage.getItem('ig_token');
+  if (saved) {
+    document.getElementById('tokenInput').value = saved;
+  }
+};
+
+async function connect() {
+  TOKEN = document.getElementById('tokenInput').value.trim();
+  if (!TOKEN) return showError('Pega tu Access Token primero.');
+
+  const btn = document.getElementById('connectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Conectando...';
+  hideError();
+
+  try {
+    // 1. Get pages + instagram account
+    const pagesRes = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account&access_token=${TOKEN}`);
+    const pagesData = await pagesRes.json();
+
+    if (pagesData.error) throw new Error(pagesData.error.message);
+    if (!pagesData.data || pagesData.data.length === 0) throw new Error('No se encontraron Facebook Pages vinculadas a este token.');
+
+    // Find page with Instagram
+    let igId = null;
+    for (const page of pagesData.data) {
+      if (page.instagram_business_account) {
+        igId = page.instagram_business_account.id;
+        break;
+      }
+    }
+
+    if (!igId) throw new Error('No se encontró una cuenta de Instagram Business vinculada a las Pages de este token.');
+
+    igAccountId = igId;
+    sessionStorage.setItem('ig_token', TOKEN);
+
+    // Connected!
+    document.getElementById('statusDot').classList.add('live');
+    document.getElementById('statusText').textContent = 'Conectado';
+    document.getElementById('setupSection').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+
+    await loadPosts();
+
+  } catch (err) {
+    showError(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Conectar →';
+  }
+}
+
+async function loadPosts() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('postsGrid').innerHTML = '';
+  document.getElementById('statsRow').innerHTML = '';
+
+  try {
+    // Get posts from last 7 days
+    const since = Math.floor((Date.now() - 7 * 24 * 60 * 60 * 1000) / 1000);
+    const until = Math.floor(Date.now() / 1000);
+
+    // Update date label
+    const sinceDate = new Date(since * 1000).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    const untilDate = new Date(until * 1000).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    document.getElementById('dateRangeLabel').textContent = `${sinceDate} – ${untilDate}`;
+
+    // Fetch media
+    const mediaRes = await fetch(
+      `https://graph.facebook.com/v19.0/${igAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&since=${since}&until=${until}&limit=50&access_token=${TOKEN}`
+    );
+    const mediaData = await mediaRes.json();
+    if (mediaData.error) throw new Error(mediaData.error.message);
+
+    const posts = mediaData.data || [];
+    if (posts.length === 0) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('postsGrid').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div class="empty-text">No se encontraron posts en los últimos 7 días.</div>
+        </div>`;
+      return;
+    }
+
+    // Fetch insights for each post
+    const enriched = await Promise.all(posts.map(async (post) => {
+      try {
+        const insightsRes = await fetch(
+          `https://graph.facebook.com/v19.0/${post.id}/insights?metric=impressions,reach,engagement&access_token=${TOKEN}`
+        );
+        const insightsData = await insightsRes.json();
+        const metrics = {};
+        if (insightsData.data) {
+          insightsData.data.forEach(m => { metrics[m.name] = m.values?.[0]?.value || 0; });
+        }
+        return { ...post, ...metrics };
+      } catch {
+        return { ...post, impressions: 0, reach: 0, engagement: 0 };
+      }
+    }));
+
+    allPosts = enriched;
+    renderStats(enriched);
+    renderPosts(enriched, currentSort);
+    document.getElementById('loadingState').style.display = 'none';
+
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('postsGrid').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-text">${err.message}</div>
+      </div>`;
+  }
+}
+
+function renderStats(posts) {
+  const totalReach = posts.reduce((s, p) => s + (p.reach || 0), 0);
+  const totalImpressions = posts.reduce((s, p) => s + (p.impressions || 0), 0);
+  const totalLikes = posts.reduce((s, p) => s + (p.like_count || 0), 0);
+  const totalComments = posts.reduce((s, p) => s + (p.comments_count || 0), 0);
+  const avgEngagement = posts.length ? Math.round(posts.reduce((s, p) => s + (p.engagement || 0), 0) / posts.length) : 0;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Posts analizados</div>
+      <div class="stat-value">${posts.length}</div>
+      <div class="stat-sub">últimos 7 días</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Alcance total</div>
+      <div class="stat-value">${fmtNum(totalReach)}</div>
+      <div class="stat-sub">personas únicas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Impresiones</div>
+      <div class="stat-value">${fmtNum(totalImpressions)}</div>
+      <div class="stat-sub">vistas totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Likes totales</div>
+      <div class="stat-value">${fmtNum(totalLikes)}</div>
+      <div class="stat-sub">${fmtNum(totalComments)} comentarios</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Eng. promedio</div>
+      <div class="stat-value">${fmtNum(avgEngagement)}</div>
+      <div class="stat-sub">por post</div>
+    </div>
+  `;
+}
+
+function renderPosts(posts, sortKey) {
+  const sorted = [...posts].sort((a, b) => {
+    if (sortKey === 'likes') return (b.like_count || 0) - (a.like_count || 0);
+    if (sortKey === 'reach') return (b.reach || 0) - (a.reach || 0);
+    if (sortKey === 'impressions') return (b.impressions || 0) - (a.impressions || 0);
+    return (b.engagement || 0) - (a.engagement || 0);
+  });
+
+  const maxEng = Math.max(...sorted.map(p => p.engagement || 0), 1);
+
+  const grid = document.getElementById('postsGrid');
+  grid.innerHTML = sorted.map((post, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const caption = post.caption ? post.caption.substring(0, 120) + (post.caption.length > 120 ? '...' : '') : '(sin caption)';
+    const date = new Date(post.timestamp).toLocaleDateString('es-MX', { weekday: 'short', month: 'short', day: 'numeric' });
+    const engPct = Math.round(((post.engagement || 0) / maxEng) * 100);
+    const typeLabel = post.media_type || 'IMAGE';
+
+    return `
+      <div class="post-card ${rankClass}" style="animation-delay: ${i * 0.05}s">
+        <div class="rank-num">${i + 1}</div>
+        <div class="post-main">
+          <div class="post-caption">${escHtml(caption)}</div>
+          <div class="post-meta">
+            <span class="type-badge ${typeLabel}">${typeLabel === 'CAROUSEL_ALBUM' ? 'CARRUSEL' : typeLabel}</span>
+            <span class="meta-chip"><span class="icon">📅</span>${date}</span>
+            <span class="meta-chip highlight"><span class="icon">❤️</span>${fmtNum(post.like_count || 0)}</span>
+            <span class="meta-chip"><span class="icon">💬</span>${fmtNum(post.comments_count || 0)}</span>
+            <span class="meta-chip"><span class="icon">👁️</span>${fmtNum(post.reach || 0)} alcance</span>
+            <span class="meta-chip"><span class="icon">📈</span>${fmtNum(post.impressions || 0)} imp.</span>
+          </div>
+        </div>
+        <div class="post-right">
+          <a href="${post.permalink}" target="_blank" class="post-link">Ver post ↗</a>
+          <div class="engagement-bar-wrap">
+            <div class="engagement-bar" style="width: ${engPct}%"></div>
+          </div>
+          <div class="eng-label">eng: ${fmtNum(post.engagement || 0)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function sortBy(key, el) {
+  currentSort = key;
+  document.querySelectorAll('.sort-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPosts(allPosts, key);
+}
+
+function refresh() {
+  if (!igAccountId) return;
+  loadPosts();
+}
+
+function fmtNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toLocaleString('es-MX');
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠️ ' + msg;
+  box.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorBox').style.display = 'none';
+}
+</script>
+</body>
+</html>
