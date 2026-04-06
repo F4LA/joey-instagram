@@ -553,25 +553,13 @@ async function connect() {
   hideError();
 
   try {
-    // 1. Get pages + instagram account
-    const pagesRes = await fetch(`https://graph.facebook.com/v19.0/me/accounts?fields=id,name,instagram_business_account&access_token=${TOKEN}`);
-    const pagesData = await pagesRes.json();
+    // Verificar token jalando info básica del IG account directamente
+    const igRes = await fetch(`https://graph.facebook.com/v19.0/17841436165720771?fields=id,name,username&access_token=${TOKEN}`);
+    const igData = await igRes.json();
 
-    if (pagesData.error) throw new Error(pagesData.error.message);
-    if (!pagesData.data || pagesData.data.length === 0) throw new Error('No se encontraron Facebook Pages vinculadas a este token.');
+    if (igData.error) throw new Error(igData.error.message);
 
-    // Find page with Instagram
-    let igId = null;
-    for (const page of pagesData.data) {
-      if (page.instagram_business_account) {
-        igId = page.instagram_business_account.id;
-        break;
-      }
-    }
-
-    if (!igId) throw new Error('No se encontró una cuenta de Instagram Business vinculada a las Pages de este token.');
-
-    igAccountId = igId;
+    igAccountId = igData.id;
     sessionStorage.setItem('ig_token', TOKEN);
 
     // Connected!
