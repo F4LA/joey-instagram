@@ -401,6 +401,79 @@
 
   /* Divider */
   .divider { width: 1px; height: 14px; background: var(--border); }
+
+  /* Date range selector */
+  .date-range-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .range-tabs {
+    display: flex;
+    gap: 3px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .range-tab {
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .range-tab.active { background: var(--accent); color: white; }
+  .range-tab:hover:not(.active) { color: var(--text); }
+
+  .custom-dates {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .custom-dates.visible { display: flex; }
+
+  .custom-dates input[type="date"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    outline: none;
+    min-width: 130px;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+  }
+  .custom-dates input[type="date"]:focus { border-color: var(--accent); }
+
+  .custom-dates .sep { font-size: 12px; color: var(--text2); }
+
+  .btn-apply {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-apply:hover { background: #2a2a2a; }
 </style>
 </head>
 <body>
@@ -434,6 +507,22 @@
 
   <!-- Dashboard -->
   <div id="dashboard">
+    <!-- Date range selector -->
+    <div class="date-range-bar">
+      <div class="range-tabs">
+        <button class="range-tab active" onclick="setRange('7d', this)">Last 7 days</button>
+        <button class="range-tab" onclick="setRange('30d', this)">Last 30 days</button>
+        <button class="range-tab" onclick="setRange('all', this)">All time</button>
+        <button class="range-tab" onclick="setRange('custom', this)">Custom</button>
+      </div>
+      <div class="custom-dates" id="customDates">
+        <input type="date" id="dateFrom" />
+        <span class="sep">→</span>
+        <input type="date" id="dateTo" />
+        <button class="btn-apply" onclick="applyCustomRange()">Aplicar</button>
+      </div>
+    </div>
+
     <div class="stats-grid" id="statsGrid"></div>
 
     <div class="toolbar">
@@ -476,11 +565,82 @@ let PAGE_TOKEN = '';
 let IG_ID = '';
 let allPosts = [];
 let currentSort = 'engagement';
+let currentRange = '7d'; // '7d' | '30d' | 'all' | 'custom'
+let customFrom = null;
+let customTo = null;
 
 window.onload = () => {
   const saved = sessionStorage.getItem('ig_token');
   if (saved) document.getElementById('tokenInput').value = saved;
+  // Set default dates for custom picker (last 7 days)
+  const today = new Date();
+  const weekAgo = new Date(); weekAgo.setDate(today.getDate() - 7);
+  document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+  document.getElementById('dateFrom').value = weekAgo.toISOString().split('T')[0];
 };
+
+function setRange(range, el) {
+  currentRange = range;
+  document.querySelectorAll('.range-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const customEl = document.getElementById('customDates');
+  if (range === 'custom') {
+    customEl.classList.add('visible');
+    return; // wait for user to click Aplicar
+  }
+  customEl.classList.remove('visible');
+  if (IG_ID) loadPosts();
+}
+
+function applyCustomRange() {
+  customFrom = document.getElementById('dateFrom').value;
+  customTo = document.getElementById('dateTo').value;
+  if (!customFrom || !customTo) return;
+  if (IG_ID) loadPosts();
+}
+
+function getDateRange() {
+  const now = new Date();
+  let since, until, label;
+
+  if (currentRange === '7d') {
+    until = new Date(now);
+    since = new Date(now);
+    since.setDate(now.getDate() - 7);
+    since.setHours(0, 0, 0, 0);
+    until.setHours(23, 59, 59, 999);
+    label = `Últimos 7 días`;
+  } else if (currentRange === '30d') {
+    until = new Date(now);
+    since = new Date(now);
+    since.setDate(now.getDate() - 30);
+    since.setHours(0, 0, 0, 0);
+    until.setHours(23, 59, 59, 999);
+    label = `Últimos 30 días`;
+  } else if (currentRange === 'all') {
+    since = new Date('2020-01-01');
+    until = new Date(now);
+    until.setHours(23, 59, 59, 999);
+    label = `Todo el tiempo`;
+  } else if (currentRange === 'custom' && customFrom && customTo) {
+    since = new Date(customFrom + 'T00:00:00');
+    until = new Date(customTo + 'T23:59:59');
+    const fmt = d => d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    label = `${fmt(since)} – ${fmt(until)}`;
+  } else {
+    // fallback
+    until = new Date(now);
+    since = new Date(now);
+    since.setDate(now.getDate() - 7);
+    label = `Últimos 7 días`;
+  }
+
+  return {
+    since: Math.floor(since.getTime() / 1000),
+    until: Math.floor(until.getTime() / 1000),
+    label
+  };
+}
 
 async function connect() {
   TOKEN = document.getElementById('tokenInput').value.trim();
@@ -533,23 +693,8 @@ async function loadPosts() {
   document.getElementById('statsGrid').innerHTML = '';
 
   try {
-    // Semana pasada: lunes a domingo
-    const now = new Date();
-    const dayOfWeek = now.getDay(); // 0=dom, 1=lun...
-    const diffToLastMonday = dayOfWeek === 0 ? 13 : dayOfWeek + 6; // días hasta el lunes pasado
-    const lastMonday = new Date(now);
-    lastMonday.setDate(now.getDate() - diffToLastMonday);
-    lastMonday.setHours(0, 0, 0, 0);
-    const lastSunday = new Date(lastMonday);
-    lastSunday.setDate(lastMonday.getDate() + 6);
-    lastSunday.setHours(23, 59, 59, 999);
-
-    const since = Math.floor(lastMonday.getTime() / 1000);
-    const until = Math.floor(lastSunday.getTime() / 1000);
-
-    const sinceStr = lastMonday.toLocaleDateString('es-MX',{month:'short',day:'numeric'});
-    const untilStr = lastSunday.toLocaleDateString('es-MX',{month:'short',day:'numeric'});
-    document.getElementById('dateLabel').textContent = `${sinceStr} – ${untilStr} (sem. pasada)`;
+    const { since, until, label } = getDateRange();
+    document.getElementById('dateLabel').textContent = label;
 
     // Fetch media list
     const mediaRes = await fetch(
