@@ -1024,24 +1024,37 @@ async function loadPosts() {
     document.getElementById('dateLabel').textContent = label;
 
     // Fetch media list
-    const mediaRes = await fetch(
-      `https://graph.facebook.com/v19.0/${IG_ID}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&since=${since}&until=${until}&limit=50&access_token=${PAGE_TOKEN}`
-    );
-    const mediaData = await mediaRes.json();
-    if (mediaData.error) throw new Error(mediaData.error.message);
+    // Nuevos seguidores (en paralelo con los posts)
+    const followersPromise = loadNewFollowers(since, until);
 
-    const posts = mediaData.data || [];
+    // Traer TODOS los posts del rango (paginando), no solo los primeros 50
+    const posts = [];
+    let next = `https://graph.facebook.com/v22.0/${IG_ID}/media?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count&limit=100&access_token=${PAGE_TOKEN}`;
+    while (next) {
+      const mediaRes = await fetch(next);
+      const mediaData = await mediaRes.json();
+      if (mediaData.error) throw new Error(mediaData.error.message);
+      let reachedOlder = false;
+      for (const m of (mediaData.data || [])) {
+        const t = Math.floor(new Date(m.timestamp).getTime() / 1000);
+        if (t > until) continue;
+        if (t < since) { reachedOlder = true; break; }
+        posts.push(m);
+      }
+      next = reachedOlder ? null : (mediaData.paging?.next || null);
+    }
+
     if (posts.length === 0) {
       document.getElementById('loadingState').style.display = 'none';
-      document.getElementById('postsList').innerHTML = '<div class="empty-state"><p>No hay posts en los últimos 7 días.</p></div>';
+      renderStats([], label, await followersPromise);
+      document.getElementById('postsList').innerHTML = `<div class="empty-state"><p>No hay posts en este periodo (${label}).</p></div>`;
       return;
     }
 
     // Fetch insights por post usando métricas actuales de Meta API v22+
     // IMAGE/CAROUSEL: reach, saved, total_interactions
     // VIDEO/REEL: reach, saved, total_interactions, views
-    const enriched = await Promise.all(posts.map(async (post) => {
-      const engagement = (post.like_count || 0) + (post.comments_count || 0) + (post.saved || 0);
+    const enriched = await mapLimit(posts, 8, async (post) => {
       try {
         const isVideo = post.media_type === 'VIDEO';
         const metricsList = isVideo
@@ -1065,14 +1078,16 @@ async function loadPosts() {
 
         if (iData.error) console.warn(`Insights error ${post.id}:`, iData.error.message);
 
+        const engagement = (post.like_count || 0) + (post.comments_count || 0) + saved;
         return { ...post, reach, saved, total_interactions, views, engagement };
       } catch(e) {
+        const engagement = (post.like_count || 0) + (post.comments_count || 0);
         return { ...post, reach: 0, saved: 0, total_interactions: 0, views: 0, engagement };
       }
-    }));
+    });
 
     allPosts = enriched;
-    renderStats(enriched);
+    renderStats(enriched, label, await followersPromise);
     renderPosts(enriched, currentSort);
     document.getElementById('loadingState').style.display = 'none';
 
@@ -1082,7 +1097,40 @@ async function loadPosts() {
   }
 }
 
-function renderStats(posts) {
+// Ejecuta fn sobre items con máximo `limit` peticiones a la vez
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let i = 0;
+  async function worker() {
+    while (i < items.length) { const idx = i++; out[idx] = await fn(items[idx]); }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
+// Nuevos seguidores: Meta solo da esta métrica para los últimos 30 días.
+// Devuelve { value } o { unavailable: 'motivo' }
+async function loadNewFollowers(since, until) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const limitSec = nowSec - 30 * 86400 + 3600; // margen de 1h
+  if (currentRange === 'all') return { unavailable: 'Meta solo da 30 días' };
+  if (since < limitSec - 86400) return { unavailable: 'Meta solo da 30 días' };
+  const s = Math.max(since, limitSec);
+  const u = Math.min(until, nowSec);
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v22.0/${IG_ID}/insights?metric=follower_count&period=day&since=${s}&until=${u}&access_token=${PAGE_TOKEN}`
+    );
+    const data = await res.json();
+    if (data.error) { console.warn('follower_count error:', data.error.message); return { unavailable: 'No disponible' }; }
+    const vals = data.data?.[0]?.values || [];
+    return { value: vals.reduce((sum, v) => sum + (v.value || 0), 0) };
+  } catch (e) {
+    return { unavailable: 'No disponible' };
+  }
+}
+
+function renderStats(posts, label = '', followers = null) {
   const totalReach = posts.reduce((s,p) => s+(p.reach||0), 0);
   const totalSaved = posts.reduce((s,p) => s+(p.saved||0), 0);
   const totalLikes = posts.reduce((s,p) => s+(p.like_count||0), 0);
@@ -1094,12 +1142,12 @@ function renderStats(posts) {
     <div class="stat-card">
       <div class="stat-label">Posts</div>
       <div class="stat-value">${posts.length}</div>
-      <div class="stat-sub">últimos 7 días</div>
+      <div class="stat-sub">${label}</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Alcance total</div>
       <div class="stat-value">${fmt(totalReach)}</div>
-      <div class="stat-sub">personas únicas</div>
+      <div class="stat-sub">suma del alcance por post</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Guardados</div>
@@ -1116,9 +1164,19 @@ function renderStats(posts) {
       <div class="stat-sub">total de respuestas</div>
     </div>
     <div class="stat-card">
+      <div class="stat-label">Engagement total</div>
+      <div class="stat-value">${fmt(totalEng)}</div>
+      <div class="stat-sub">likes + comentarios + guardados</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-label">Eng. promedio</div>
       <div class="stat-value">${fmt(avgEng)}</div>
-      <div class="stat-sub">likes + comentarios + guardados</div>
+      <div class="stat-sub">engagement total ÷ posts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Nuevos seguidores</div>
+      <div class="stat-value">${followers && followers.value !== undefined ? fmt(followers.value) : 'N/D'}</div>
+      <div class="stat-sub">${followers && followers.value !== undefined ? label : (followers?.unavailable || 'No disponible')}</div>
     </div>
   `;
 }
