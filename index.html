@@ -670,6 +670,7 @@
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button class="btn-ghost" onclick="refresh()">↻ Actualizar</button>
+        <button class="btn-ghost" id="exportBtn" onclick="exportWeeklyReport()">⬇ Reporte semanal</button>
         <div class="sort-tabs">
           <button class="sort-tab active" onclick="sortBy('engagement',this)">Engagement</button>
           <button class="sort-tab" onclick="sortBy('reach',this)">Alcance</button>
@@ -1054,37 +1055,7 @@ async function loadPosts() {
     // Fetch insights por post usando métricas actuales de Meta API v22+
     // IMAGE/CAROUSEL: reach, saved, total_interactions
     // VIDEO/REEL: reach, saved, total_interactions, views
-    const enriched = await mapLimit(posts, 8, async (post) => {
-      try {
-        const isVideo = post.media_type === 'VIDEO';
-        const metricsList = isVideo
-          ? 'reach,saved,total_interactions,views'
-          : 'reach,saved,total_interactions';
-
-        const iRes = await fetch(
-          `https://graph.facebook.com/v22.0/${post.id}/insights?metric=${metricsList}&access_token=${PAGE_TOKEN}`
-        );
-        const iData = await iRes.json();
-
-        let reach = 0, saved = 0, total_interactions = 0, views = 0;
-        if (iData.data) {
-          iData.data.forEach(m => {
-            if (m.name === 'reach') reach = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
-            if (m.name === 'saved') saved = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
-            if (m.name === 'total_interactions') total_interactions = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
-            if (m.name === 'views') views = m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
-          });
-        }
-
-        if (iData.error) console.warn(`Insights error ${post.id}:`, iData.error.message);
-
-        const engagement = (post.like_count || 0) + (post.comments_count || 0) + saved;
-        return { ...post, reach, saved, total_interactions, views, engagement };
-      } catch(e) {
-        const engagement = (post.like_count || 0) + (post.comments_count || 0);
-        return { ...post, reach: 0, saved: 0, total_interactions: 0, views: 0, engagement };
-      }
-    });
+    const enriched = await mapLimit(posts, 8, enrichPost);
 
     allPosts = enriched;
     renderStats(enriched, label, await followersPromise);
@@ -1094,6 +1065,130 @@ async function loadPosts() {
   } catch(err) {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('postsList').innerHTML = `<div class="empty-state"><p>⚠️ ${err.message}</p></div>`;
+  }
+}
+
+// Trae insights de un post y calcula engagement (likes + comentarios + guardados)
+async function enrichPost(post) {
+  try {
+    const isVideo = post.media_type === 'VIDEO';
+    const metricsList = isVideo ? 'reach,saved,total_interactions,views' : 'reach,saved,total_interactions';
+    const iRes = await fetch(
+      `https://graph.facebook.com/v22.0/${post.id}/insights?metric=${metricsList}&access_token=${PAGE_TOKEN}`
+    );
+    const iData = await iRes.json();
+    const get = m => m.values?.[0]?.value ?? (typeof m.value === 'number' ? m.value : 0);
+    let reach = 0, saved = 0, total_interactions = 0, views = 0;
+    (iData.data || []).forEach(m => {
+      if (m.name === 'reach') reach = get(m);
+      if (m.name === 'saved') saved = get(m);
+      if (m.name === 'total_interactions') total_interactions = get(m);
+      if (m.name === 'views') views = get(m);
+    });
+    if (iData.error) console.warn(`Insights error ${post.id}:`, iData.error.message);
+    const engagement = (post.like_count || 0) + (post.comments_count || 0) + saved;
+    return { ...post, reach, saved, total_interactions, views, engagement };
+  } catch (e) {
+    const engagement = (post.like_count || 0) + (post.comments_count || 0);
+    return { ...post, reach: 0, saved: 0, total_interactions: 0, views: 0, engagement };
+  }
+}
+
+// ===== Reporte semanal (CSV, semanas lunes a domingo, todo 2026) =====
+const REPORT_START = new Date(2025, 11, 29); // lunes 29 dic 2025
+const REPORT_WEEKS = 52;
+
+function weekIndexOf(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor(Math.round((d - REPORT_START) / 86400000) / 7);
+}
+
+async function exportWeeklyReport() {
+  if (!IG_ID) return showError('Conecta la cuenta primero.');
+  const btn = document.getElementById('exportBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generando...';
+  hideError();
+  try {
+    const pad = n => String(n).padStart(2, '0');
+    const md = d => `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const weeks = [];
+    for (let i = 0; i < REPORT_WEEKS; i++) {
+      const a = new Date(REPORT_START); a.setDate(a.getDate() + i * 7);
+      const b = new Date(a); b.setDate(b.getDate() + 6);
+      weeks.push(`${md(a)} to ${md(b)}`);
+    }
+    // Solo semanas completas (hasta el domingo pasado)
+    const lastComplete = weekIndexOf(new Date()) - 1;
+
+    // 1) Todos los posts desde el inicio del reporte
+    const sinceSec = Math.floor(REPORT_START.getTime() / 1000);
+    const posts = [];
+    let next = `https://graph.facebook.com/v22.0/${IG_ID}/media?fields=id,media_type,timestamp,like_count,comments_count&limit=100&access_token=${PAGE_TOKEN}`;
+    while (next) {
+      const r = await fetch(next); const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      let older = false;
+      for (const m of (d.data || [])) {
+        if (Math.floor(new Date(m.timestamp).getTime() / 1000) < sinceSec) { older = true; break; }
+        posts.push(m);
+      }
+      next = older ? null : (d.paging?.next || null);
+    }
+    btn.textContent = `Generando... (${posts.length} posts)`;
+    const enriched = await mapLimit(posts, 8, enrichPost);
+
+    const zero = () => new Array(REPORT_WEEKS).fill(0);
+    const rows = {
+      'Posts published': zero(), 'Reach': zero(), 'Likes': zero(), 'Comments': zero(),
+      'Saves': zero(), 'Total engagement': zero(),
+    };
+    for (const p of enriched) {
+      const w = weekIndexOf(new Date(p.timestamp));
+      if (w < 0 || w >= REPORT_WEEKS) continue;
+      rows['Posts published'][w] += 1;
+      rows['Reach'][w] += p.reach || 0;
+      rows['Likes'][w] += p.like_count || 0;
+      rows['Comments'][w] += p.comments_count || 0;
+      rows['Saves'][w] += p.saved || 0;
+      rows['Total engagement'][w] += p.engagement || 0;
+    }
+
+    // 2) Nuevos seguidores: solo últimos 30 días; solo semanas con los 7 días completos
+    const followers = new Array(REPORT_WEEKS).fill(null);
+    try {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const r = await fetch(
+        `https://graph.facebook.com/v22.0/${IG_ID}/insights?metric=follower_count&period=day&since=${nowSec - 30 * 86400 + 3600}&until=${nowSec}&access_token=${PAGE_TOKEN}`
+      );
+      const d = await r.json();
+      if (d.error) console.warn('follower_count error:', d.error.message);
+      const sums = {}, days = {};
+      for (const v of (d.data?.[0]?.values || [])) {
+        const day = new Date(new Date(v.end_time).getTime() - 1000); // el día que termina en end_time
+        const w = weekIndexOf(day);
+        sums[w] = (sums[w] || 0) + (v.value || 0);
+        days[w] = (days[w] || 0) + 1;
+      }
+      for (const w in sums) if (days[w] >= 7 && w >= 0 && w < REPORT_WEEKS) followers[w] = sums[w];
+    } catch (e) { console.warn(e); }
+
+    // 3) Armar CSV con el mismo formato de la referencia
+    const cell = (v, i) => (i > lastComplete || v === null ? '' : v);
+    const lines = [',' + weeks.join(',')];
+    for (const [name, vals] of Object.entries(rows)) lines.push(name + ',' + vals.map(cell).join(','));
+    lines.push('New followers,' + followers.map(cell).join(','));
+
+    const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Instagram_Weekly_Report.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (err) {
+    showError('Error al generar el reporte: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇ Reporte semanal';
   }
 }
 
